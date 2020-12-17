@@ -6,7 +6,7 @@
 
 ## Abstract
 
-**Background**: The La Liga, the Premier League (EPL), and the Bundesliga have been the [top three soccer leagues in the world](https://en.wikipedia.org/wiki/UEFA_coefficient#Top_leagues_by_period) over the last since 2014. They are known to be highly competitive. In comparison, the Major League Soccer (MLS) is less known to the world.
+**Background**: The La Liga, the Premier League (EPL), and the Bundesliga have been the [top three soccer leagues in the world](https://en.wikipedia.org/wiki/UEFA_coefficient#Top_leagues_by_period) over the last since 2014. They are known to be highly competitive. In comparison, the Major League Soccer (MLS) is less known to the world and is seemingly at a lower level of competitiveness.
 
 **Data and research question**: In this project I analyzed team performances (points per game, win proportions, etc.) in the four soccer leagues from the 2015/2016 season to the 2019/2020 season. The main research question was: **_Which soccer league is the most competitive?_**
 
