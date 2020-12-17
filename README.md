@@ -6,17 +6,19 @@
 
 ## Abstract
 
-**Background**: The La Liga, the Premier League (EPL), and the Bundesliga have been the [top three soccer leagues in the world](https://en.wikipedia.org/wiki/UEFA_coefficient#Top_leagues_by_period) since 2014. In comparison, the Major League Soccer (MLS) is less known to the world.
+**Background**: *Competitive balance*, which refers to the degree of uncertainty regarding the outcome of a competition, is frequently debated among soccer fans and has received considerable attention both [in](../tree/main/References) and [outside](https://www.fearthewall.com/2019/7/8/20685467/the-state-of-the-league-comparing-the-bundesliga-with-its-competitors) academia.
 
 **Data and research question**: In this project I analyzed team performances (points per game, win proportions, etc.) in the four soccer leagues from the 2015/2016 season to the 2019/2020 season. The main research question was: **_Which soccer league is the most competitive?_**
 
-**Method and findings**: The entire project was done in R. Through exploratory data analysis and k-means clustering, I found that, in general, the MLS was the most competitive.
+**Method and findings**: The entire project was done in R. Through exploratory data analysis and k-means clustering, I found that, in general, the Major League Soccer was the more competitive than the Bundesliga, the La Liga, and the Premier League.
 
 For a complete report, see the [wiki page](https://github.com/tara-nguyen/soccer-competitiveness-k-means-clustering/wiki)
 
 ## List of files and directory in the repo
 
 [`Plots`](Plots) - directory for plots created during data visualization
+
+[`References`][References] - directory for academic articles on competitive balance
 
 [`all-form-leaguetables.csv`](all-form-leaguetables.csv) - final data set
 
