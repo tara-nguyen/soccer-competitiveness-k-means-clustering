@@ -6,7 +6,7 @@
 
 ## Abstract
 
-**Background**: *Competitive balance*, which refers to the degree of uncertainty regarding the outcome of a competition, is frequently debated among soccer fans and has received considerable attention both [in](../tree/main/References) and [outside](https://www.fearthewall.com/2019/7/8/20685467/the-state-of-the-league-comparing-the-bundesliga-with-its-competitors) academia.
+**Background**: *Competitive balance*, which refers to the degree of uncertainty regarding the outcome of a competition, is frequently debated among soccer fans and has received considerable attention both [in](References) and [outside](https://www.fearthewall.com/2019/7/8/20685467/the-state-of-the-league-comparing-the-bundesliga-with-its-competitors) academia.
 
 **Data and research question**: In this project I analyzed team performances (points per game, win proportions, etc.) in the four soccer leagues from the 2015/2016 season to the 2019/2020 season. The main research question was: **_Which soccer league is the most competitive?_**
 
