@@ -16,6 +16,7 @@
 library(readr)
 alldat <- read_csv('all-form-leaguetables.csv')
 alldat
+names(alldat)
 unique(alldat$season)
 
 ########## DATA TRANSFORMATION ##########
@@ -32,19 +33,16 @@ alldat$seasonstart <- as.factor(alldat$seasonstart)
 leagues <- levels(alldat$league)
 seasons <- levels(alldat$seasonstart)
 
-## numbers of leagues and seasons
+## numbers of leagues, seasons, and unique teams
 
 n_leagues <- length(leagues)
 n_seasons <- length(seasons)
+n_teams_unique <- length(unique(alldat$team))
 
-## total number of teams across all seasons of each league
+## number of unique teams across all seasons of each league
 
 (n_teams_bl <- aggregate(team ~ league, alldat,
 	function(x) length(unique(x))))
-
-## number of teams in each season of each league
-
-(n_teams_bs_bl <- xtabs(~ league + seasonstart, alldat))
 
 ## points per game and proportions of wins
 
@@ -180,13 +178,7 @@ saveaspng <- function(name, w = 700, h = 480) {
 	png(filename, w, h)
 }
 
-##### PLOTS OF DISTRIBUTION OF NUMBER OF TEAMS #####
-
-barplot(t(n_teams_bs_bl), col = col_season, ylab = 'Number of teams',
-	main = 'Distribution of the Number of Teams by League and Season', 
-	ylim = c(0, max(rowSums(n_teams_bs_bl)) * 1.15),
-	legend.text = seasons, args.legend = list(x = 'topleft', 
-	title = 'Season', adj = .1, horiz = T, inset = .02))
+##### PLOT OF NUMBERS OF UNIQUE TEAMS #####
 
 barplot(n_teams_bl$team ~ n_teams_bl$league, col = col_league,
 	main = 'Numbers of Unique Teams Grouped by League', xlab = '',

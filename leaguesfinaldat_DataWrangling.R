@@ -156,7 +156,7 @@ merged
 
 names(merged)
 merged <- subset(merged, select = c(league, season, position, team,
-	matches, wins:week38))
+	matches, wins, points, week1:week38))
 names(merged)
 
 ## save new dataset to csv file
