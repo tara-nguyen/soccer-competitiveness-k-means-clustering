@@ -37,7 +37,7 @@ seasons <- levels(alldat$seasonstart)
 
 n_leagues <- length(leagues)
 n_seasons <- length(seasons)
-n_teams_unique <- length(unique(alldat$team))
+(n_teams_unique <- length(unique(alldat$team)))
 
 ## number of unique teams across all seasons of each league
 
@@ -115,7 +115,7 @@ names(alldat)
 	select = c(league, position, team, ppg, winprop)))
 summary(top4dat)
 
-## numbers of times teams have finished in the top 4
+## numbers of times teams finished in the top 4
 
 top4counts <- aggregate(position ~ team + league, top4dat, length)
 top4counts
@@ -129,12 +129,22 @@ top4counts
 ## number of teams that finished in the top 4 in each league
 
 (n_top4 <- xtabs(~ league, top4counts))
+n_top4 * 100 / n_teams_bl$team   ## percentages
 
-## average points per game and average win proportions
+## teams that won the league in each season
+
+top4dat[top4dat$position == 1, c('league', 'team')]
+
+## average points per game and average win proportions for the top 4
 ## grouped by position and league combined
 
 (top4means <- aggregate(cbind(ppg, winprop) ~ position + league, top4dat, 
 	mean))
+
+## minimum points per game and minimum win proportion needed to finish in the top 4
+
+fifthpos <- subset(alldat, position == 5, select = c(league, ppg, winprop))
+aggregate(cbind(ppg, winprop) ~ league, fifthpos, mean)
 
 ########## DATA VISUALIZATION ##########
 
@@ -178,23 +188,39 @@ saveaspng <- function(name, w = 700, h = 480) {
 	png(filename, w, h)
 }
 
-##### PLOT OF NUMBERS OF UNIQUE TEAMS #####
+##### PLOTS OF NUMBERS OF TEAMS #####
 
-barplot(n_teams_bl$team ~ n_teams_bl$league, col = col_league,
-	main = 'Numbers of Unique Teams Grouped by League', xlab = '',
-	ylab = 'Number of unique teams', 
+saveaspng('numteams')
+bp <- barplot(n_teams_bl$team, col = col_league2, ylab = 'Number of teams',
+	main = paste0('Total Number of Teams and Number of Teams That ',
+	'Finished in the Top 4\nAcross All Seasons, Grouped by League'), 
 	ylim = c(0, max(n_teams_bl$team) * 1.1))
+## add bars for numbers of teams in the top 4
+barplot(n_top4, col = col_league, axes = F, add = T)
+## add text denoting percentages
+text(bp, 4, paste0(round(n_top4 * 100 / n_teams_bl$team, 2), '%'), font = 2)
+## add explanatory text
+mtext(paste('The darker area in each bar represents teams that',
+	'finished in the top 4.'), line = -1.5)
+dev.off()
 
 ##### PLOTS OF POINTS PER GAME #####
 
-boxplot(alldat$ppg ~ alldat$league, col = col_league, xlab = NULL,
-	main = 'Points Per Game Grouped by League', ylab = 'Points per game', 
-	boxwex = .6, medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
-## add mean points
-points(aggregate(ppg ~ league, alldat, mean)$ppg, bg = 2, pch = 23, 
-	cex = 1.2)
-## add text to explain the mean points
-mtext('The red diamond shapes represent the mean values.', adj = 0)
+saveaspng('ppg-position')
+plot(alldat$ppg, type = 'n', xlab = 'Season-end position',
+	main = 'Points Per Game as a Function of Season-End Position',
+	ylab = 'Points per game', xlim = c(1, max(alldat$position)), 
+	ylim = range(pos_league_avg$ppg))
+for (i in seq_along(leagues)) {
+	points(pos_league_avg$ppg[pos_league_avg$league == leagues[i]], 
+		type = 'b', col = i, pch = i, lty = i)
+}
+## add vertical lines at positions 6 and 8
+abline(v = c(6, 8), col = i + 1:2, lty = i + 1:2, lwd = 3)
+text(c(4.5, 9.5), 1, paste0('Position #', c(6, 8)))
+## add legend
+legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
+dev.off()
 
 ## box positions
 boxpos <- vector('list', n_seasons)
@@ -222,22 +248,43 @@ for (i in seq_along(seasons)) {
 ## add text to explain the mean points
 mtext('The red diamond shapes represent the mean values.', adj = 0)
 
-plot(alldat$ppg, type = 'n', xlab = 'Season-end position',
-	main = 'Points Per Game as a Function of Season-End Position',
-	ylab = 'Points per game', xlim = c(1, max(alldat$position)), 
-	ylim = range(pos_league_avg$ppg))
+##### PLOTS OF DIFFERENCES FROM IMMEDIATELY-BELOW-RANK TEAMS IN POINTS PER GAME #####
+
+saveaspng('diffppg')
+boxplot(alldat$diffppg ~ alldat$league, col = col_league, xlab = NULL,
+	ylab = 'Difference in points per game', main = paste('Differences From', 
+	'Immediately-Below-Rank Teams in Points Per Game, Grouped by League'), 
+	boxwex = .6, medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
+## add mean points
+points(aggregate(diffppg ~ league, alldat, mean)$diffppg, bg = 'red', 
+	pch = 23, cex = 1.2)
+## add text to explain the mean points
+mtext('The red diamond shapes represent the mean values.')
+dev.off()
+
+saveaspng('diffppg-position')
+plot(alldat$diffppg, type = 'n', xlim = c(1, max(alldat$position) - 1),
+	main = paste0('Differences From Immediately-Below-Rank Teams in ',
+	'Points Per Game,\nas a Function of Season-End Position'),
+	xlab = 'Season-end position', ylab = 'Difference in points per game',
+	ylim = range(pos_league_diffavg$diffppg))
 for (i in seq_along(leagues)) {
-	points(pos_league_avg$ppg[pos_league_avg$league == leagues[i]], 
-		type = 'b', col = i, pch = i, lty = i)
+	with(pos_league_diffavg, points(diffppg[league == leagues[i]],
+		type = 'b', col = i, pch = i, lty = i))
 }
-## add vertical lines at positions 6 and 8
-abline(v = c(6, 8), col = i + 1:2, lty = i + 1:2, lwd = 3)
-text(c(5, 9), 1, paste0('Position #', c(6, 8)))
+## add horizontal line at difference = .15 and vertical line at position = 2
+abline(h = .15, v = 2, col = i + 1:2, lty = i + 1:2, lwd = 3)
+## add explanatory text
+text(10.5, .162, 'equivalent to 5-6 points per season')
+text(2.3, .29, paste0('difference between\nsecond-place team\n',
+	'and third-place team'), adj = 0)
 ## add legend
 legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
+dev.off()
 
 ##### PLOT OF WIN PROPORTIONS #####
 
+saveaspng('winprop-position')
 plot(alldat$winprop, type = 'n', xlab = 'Season-end position',
 	main = 'Win Proportions as a Function of Season-End Position',
 	ylab = 'Win proportion', xlim = c(1, max(alldat$position)), 
@@ -248,59 +295,32 @@ for (i in seq_along(leagues)) {
 }
 ## add vertical line at position = 7
 abline(v = 7, col = i + 1, lty = i + 1, lwd = 3)
-text(6, .3, 'Position #7')
+text(5.5, .3, 'Position #7')
 ## add legend
 legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
-
-##### PLOTS OF DIFFERENCES FROM IMMEDIATELY-BELOW-RANK TEAMS IN POINTS PER GAME #####
-
-boxplot(alldat$diffppg ~ alldat$league, col = col_league, xlab = NULL,
-	ylab = 'Difference in points per game', main = paste('Differences From', 
-	'Immediately-Below-Rank Teams in Points Per Game, Grouped by League'), 
-	boxwex = .6, medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
-## add mean points
-points(aggregate(diffppg ~ league, alldat, mean)$diffppg, bg = 'red', 
-	pch = 23, cex = 1.2)
-## add text to explain the mean points
-mtext('The red diamond shapes represent the mean values.', adj = 0)
-
-plot(alldat$diffppg, type = 'n', xlim = c(1, max(alldat$position) - 1),
-	main = paste('Differences From Immediately-Below-Rank Teams in',
-	'Points Per Game, as a Function of Season-End Position'),
-	xlab = 'Season-end position', ylab = 'Difference in points per game',
-	ylim = range(pos_league_diffavg$diffppg))
-for (i in seq_along(leagues)) {
-	with(pos_league_diffavg, points(diffppg[league == leagues[i]],
-		type = 'b', col = i, pch = i, lty = i))
-}
-## add horizontal line at difference = .15 and vertical line at position = 2
-abline(h = .15, v = 2, col = i + 1:2, lty = i + 1:2, lwd = 3)
-## add explanatory text
-text(11, .16, 'equivalent to 5-6 points in all games per season')
-text(2.3, .27, paste0('difference between\nsecond-place team\n',
-	'and third-place team'), adj = 0)
-## add legend
-legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
+dev.off()
 
 ##### PLOT OF DIFFERENCES FROM IMMEDIATELY-BELOW-RANK TEAMS IN WIN PROPORTION #####
 
+saveaspng('diffwinprop-position')
 plot(alldat$diffwinprop, type = 'n', xlim = c(1, max(alldat$position) - 1),
-	main = paste('Differences From Immediately-Below-Rank Teams in',
-	'Win Proportion, as a Function of Season-End Position'),
+	main = paste0('Differences From Immediately-Below-Rank Teams in ',
+	'Win Proportion,\nas a Function of Season-End Position'),
 	xlab = 'Season-end position', ylab = 'Difference in win proportion',
 	ylim = range(pos_league_diffavg$diffwinprop))
 for (i in seq_along(leagues)) {
 	with(pos_league_diffavg, points(diffwinprop[league == leagues[i]],
-		type = 'b', col = col_league[i], pch = i, lty = i))
+		type = 'b', col = i, pch = i, lty = i))
 }
 ## add horizontal line at difference = .065 and vertical line at position = 2
 abline(h = .065, v = 2, col = i + 1:2, lty = i + 1:2, lwd = 3)
 ## add explanatory text
-text(12, .07, 'difference = .065, or more than 2 wins per season')
+text(10, .07, 'difference = .065, or more than 2 wins per season')
 text(2.3, .125, paste0('difference between\nsecond-place team\n',
 	'and third-place team'), adj = 0)
 ## add legend
 legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
+dev.off()
 
 ##### PLOTS OF POINTS AFTER EACH WEEK #####
 
@@ -330,43 +350,39 @@ plot_weekpts <- function(league) {
 		adj = 0, line = .1)
 }
 
+saveaspng('weekpts-bundesliga', 1000, 600)
 plot_weekpts(leagues[1])
 ## add vertical lines at weeks 8 and 16
 abline(v = c(8, 16), col = getcol(2, 9), lty = c(4, 2), lwd = 3)
 text(c(7, 17.2), c(25, 51), paste('Week', c(8, 16)))
+dev.off()
 
+saveaspng('weekpts-laliga', 1000, 600)
 plot_weekpts(leagues[2])
 ## add vertical lines at weeks 3 and 16
 abline(v = c(3, 16), col = rev(getcol(2, 9)), lty = c(2, 4), lwd = 3)
 text(c(1.8, 17.2), c(15, 51), paste('Week', c(3, 16)))
+dev.off()
 
+saveaspng('weekpts-mls', 1000, 600)
 plot_weekpts(leagues[3])
 ## add vertical lines at weeks 18 and 19
 abline(v = c(18, 19), col = getcol(2, 9), lty = c(4, 2), lwd = 3)
 text(c(16.8, 20.2), c(40, 50), paste('Week', c(18, 19)))
+dev.off()
 
+saveaspng('weekpts-epl', 1000, 600)
 plot_weekpts(leagues[4])
 ## add vertical lines at weeks 9 and 17
 abline(v = c(9, 17), col = rev(getcol(2, 9)), lty = c(2, 4), lwd = 3)
 text(c(7.8, 18.2), c(30, 58), paste('Week', c(9, 17)))
+dev.off()
 
 ##### PLOTS OF DATA FOR TEAMS THAT FINISHED IN THE TOP 4 POSITIONS #####
 
-## number of teams in the top 4
-
-bp <- barplot(n_teams_bl$team, col = col_league2, ylab = 'Number of teams',
-	main = paste0('Total Number of Teams and Number of Teams That ',
-	'Finished in the Top 4\nAcross All Seasons, Grouped by League'), 
-	ylim = c(0, max(n_teams_bl$team) * 1.1))
-barplot(n_top4, col = col_league, axes = F, add = T)
-## add text denoting percentages
-text(bp, 4, paste0(round(n_top4 * 100 / n_teams_bl$team, 2), '%'), font = 2)
-## add explanatory text
-mtext(paste('The darker area in each bar represents teams that',
-	'finished in the top 4.'), line = -1)
-
 ## points per game
 
+saveaspng('top4-ppg')
 bp <- barplot(top4means$ppg, col = getcol(4, 9),
 	main = paste('Points Per Game of Teams That Finished in the Top 4,',
 	'Grouped by Season and League'), ylab = 'Points per game',
@@ -376,15 +392,27 @@ bp <- barplot(top4means$ppg, col = getcol(4, 9),
 ## add labels
 at <- sapply(split(bp, gl(n_leagues, 4)), mean)
 mtext(leagues, at = at, side = 1, line = 1)
-## add text denoting mean values
-text <- paste0('(M = ', 
-	round(aggregate(ppg ~ league, top4means, mean)$ppg, 2), ')')
-mtext(text, at = at, side = 1, line = 2.5, font = 3)
+dev.off()
+
+## win proportion
+
+saveaspng('top4-winprop')
+bp <- barplot(top4means$winprop, col = getcol(4, 9),
+	main = paste('Win Proportions for Teams That Finished in the Top 4,',
+	'Grouped by Season and League'), ylab = 'Win proportion',
+	ylim = c(0, max(top4means$winprop) * 1.1), space = c(1, rep(0, 3)),
+	legend.text = 1:4, args.legend = list(x = 'top', horiz = T, adj = .75,
+	title = 'Season-end position', inset = .02))
+## add labels
+at <- sapply(split(bp, gl(n_leagues, 4)), mean)
+mtext(leagues, at = at, side = 1, line = 1)
+dev.off()
 
 ##### PLOTS COMPARING THE TOP 4 TEAMS VS. TEAMS OUTSIDE THE TOP 4 #####
 
 ## points per game
 
+saveaspng('top4vsnontop4-ppg')
 boxplot(ppg ~ top4 + league, alldat, show.names = F, col = 3:4,
 	main = paste('Comparing Points Per Game of Top-4 Vs. Non-Top-4',
 	'in Each League'), xlab = NULL, ylab = 'Points per game', boxwex = .6, 
@@ -393,14 +421,11 @@ boxplot(ppg ~ top4 + league, alldat, show.names = F, col = 3:4,
 mtext(c('Not top 4', 'Top 4'), at = 1:(n_leagues*2), side = 1, line = 1,
 	col = 3:4)
 mtext(leagues, at = seq(1, n_leagues*2, 2) + .5, side = 1, line = 3)
-## add mean points
-points(aggregate(ppg ~ top4 + league, alldat, mean)$ppg, bg = 2, pch = 23, 
-	cex = 1.2)
-## add text to explain the mean points
-mtext('The red diamond shapes represent the mean values.', adj = 0)
+dev.off()
 
 ## win proportions
 
+saveaspng('top4vsnontop4-winprop')
 boxplot(winprop ~ top4 + league, alldat, show.names = F, col = 3:4,
 	main = paste('Comparing Win Proportions for Top-4 Vs. Non-Top-4',
 	'in Each League'), xlab = NULL, ylab = 'Win proportion', boxwex = .6, 
@@ -409,11 +434,7 @@ boxplot(winprop ~ top4 + league, alldat, show.names = F, col = 3:4,
 mtext(c('Not top 4', 'Top 4'), at = 1 :(n_leagues*2), side = 1, line = 1,
 	col = 3:4)
 mtext(leagues, at = seq(1, n_leagues*2, 2) + .5, side = 1, line = 3)
-## add mean points
-points(aggregate(winprop ~ top4 + league, alldat, mean)$winprop, bg = 2, 
-	pch = 23, cex = 1.2)
-## add text to explain the mean points
-mtext('The red diamond shapes represent the mean values.', adj = 0)
+dev.off()
 
 ########## STATISTICAL ANALYSES ##########
 
@@ -451,7 +472,7 @@ kmviz <- function(i, km) {
 	
 	plot(winprop ~ ppg, df, col = km$cluster, pch = km$cluster,
 		main = paste0('Clusters of Teams in the ', leagues[i], '\nBased on',
-		' Win Proportions and Points Per Game'), xlab = 'Points per game',
+		' Points Per Game and Win Proportions'), xlab = 'Points per game',
 		ylab = 'Win proportion')
 	## add cluster centers
 	points(km$centers, col = 1:max(km$cluster), pch = 8, cex = 3, lwd = 3)
@@ -459,10 +480,14 @@ kmviz <- function(i, km) {
 
 ## perform k-means clustering on each league and visualize the clusters
 
+saveaspng('kmeans', 800, 600)
 par(mfrow = c(2, 2))
 km <- vector('list', length(leagues))
+names(km) <- leagues
 for (i in seq_along(leagues)) {
 	km[[i]] <- k_means(i, 4)
 	kmviz(i, km[[i]])
 }
 par(mfrow = c(1, 1))
+km
+dev.off()
