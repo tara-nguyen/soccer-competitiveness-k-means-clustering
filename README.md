@@ -18,6 +18,8 @@ For a complete report, see the [wiki page](https://github.com/tara-nguyen/soccer
 
 [`Plots`](Plots) - directory for plots created during data visualization
 
+`README.md` - this document you are currently reading
+
 [`References`](References) - directory for academic articles on competitive balance
 
 [`all-form-leaguetables.csv`](all-form-leaguetables.csv) - final data set
@@ -29,8 +31,6 @@ For a complete report, see the [wiki page](https://github.com/tara-nguyen/soccer
 [`leaguescompetitiveness_Analysis.R`](leaguescompetitiveness_Analysis.R) - main R script for data wrangling, visualization, and statistical analyses
 
 [`leaguesfinaldat_DataWrangling.R`](leaguesfinaldat_DataWrangling.R) - R script for creating the final data set
-
-`README.md` - this document you are currently reading
 
 ## Usage Note
 
