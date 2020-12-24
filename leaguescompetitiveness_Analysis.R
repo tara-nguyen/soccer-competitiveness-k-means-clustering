@@ -179,12 +179,39 @@ col_league2 <- getcol(n_leagues, 9, .5)
 
 col_season <- getcol(n_seasons, 9)
 
+## function for drawing box plots with user-defined properties
+## x: data for plotting
+## ...: other arguments to be passed to the boxplot() function
+
+myboxplot <- function(x, ...) {
+	boxplot(x, ..., boxwex = .6, medlwd = 2, whisklwd = .5, staplewex = .3, 
+		outcex = .5)
+}
+
+## function for plotting a variable as a function of season-end position
+## var: variable to plot
+## dat: data frame or matrix containing var
+## main: part of the plot title
+## ...: other arguments to be passed to the plot() function
+
+myscatterplot <- function(var, dat, main, ...) {
+	plot(dat[, var], type = 'n', xlab = 'Season-end position',
+		xlim = c(1, max(alldat$position)), ylim = range(dat[, var]),
+		main = paste0(main, 'as a Function of Season-End Position'), ...)
+	for (i in seq_along(leagues)) {
+		points(dat[dat$league == leagues[i], var], type = 'b', col = i,
+			pch = i, lty = i)
+	}
+	## add legend
+	legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
+}
+
 ## function for saving plots as png files
 ## name: a descriptive name for the file (without the .png extension)
 ## w, h: width and height (in pixels) of the image
 
 saveaspng <- function(name, w = 700, h = 480) {
-	filename <- paste0('Plots/', name, '.png')
+	filename <- paste0('leagues5seasons/Plots/', name, '.png')
 	png(filename, w, h)
 }
 
@@ -207,54 +234,19 @@ dev.off()
 ##### PLOTS OF POINTS PER GAME #####
 
 saveaspng('ppg-position')
-plot(alldat$ppg, type = 'n', xlab = 'Season-end position',
-	main = 'Points Per Game as a Function of Season-End Position',
-	ylab = 'Points per game', xlim = c(1, max(alldat$position)), 
-	ylim = range(pos_league_avg$ppg))
-for (i in seq_along(leagues)) {
-	points(pos_league_avg$ppg[pos_league_avg$league == leagues[i]], 
-		type = 'b', col = i, pch = i, lty = i)
-}
+myscatterplot('ppg', pos_league_avg, main = 'Points Per Game ',
+	ylab = 'Points per game')
 ## add vertical lines at positions 6 and 8
 abline(v = c(6, 8), col = i + 1:2, lty = i + 1:2, lwd = 3)
 text(c(4.5, 9.5), 1, paste0('Position #', c(6, 8)))
-## add legend
-legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
 dev.off()
-
-## box positions
-boxpos <- vector('list', n_seasons)
-for (i in 1:n_seasons) {
-	boxpos[[i]] <- seq((i - 1) * n_leagues + i, i * n_leagues + i - 1)
-}
-boxpos
-
-boxplot(ppg ~ league + seasonstart, data = alldat, show.names = F,
-	main = 'Points Per Game Grouped by League and Season',
-	xlab = 'Year season started', ylab = 'Points per game',
-	ylim = c(min(alldat$ppg) / 1.1, max(alldat$ppg) * 1.1),
-	col = col_league, boxwex = .6, medlwd = 2, whisklwd = .5, 
-	staplewex = .3, outcex = .5, at = unlist(boxpos))
-## add labels and legend
-mtext(seasons, at = sapply(boxpos, mean), side = 1, line = 1)
-legend('topleft', leagues, fill = col_league, ncol = 2, inset = c(.1, 0))
-## add mean points
-for (i in seq_along(seasons)) {
-	points(boxpos[[i]], 
-		ppg_league_ss$ppg[ppg_league_ss$seasonstart == seasons[i]], bg = 2, 
-		pch = 23, cex = 1.2)
-	points(NA)
-}
-## add text to explain the mean points
-mtext('The red diamond shapes represent the mean values.', adj = 0)
 
 ##### PLOTS OF DIFFERENCES FROM IMMEDIATELY-BELOW-RANK TEAMS IN POINTS PER GAME #####
 
 saveaspng('diffppg')
-boxplot(alldat$diffppg ~ alldat$league, col = col_league, xlab = NULL,
+myboxplot(alldat$diffppg ~ alldat$league, col = col_league, xlab = NULL,
 	ylab = 'Difference in points per game', main = paste('Differences From', 
-	'Immediately-Below-Rank Teams in Points Per Game, Grouped by League'), 
-	boxwex = .6, medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
+	'Immediately-Below-Rank Teams in Points Per Game, Grouped by League'))
 ## add mean points
 points(aggregate(diffppg ~ league, alldat, mean)$diffppg, bg = 'red', 
 	pch = 23, cex = 1.2)
@@ -263,63 +255,39 @@ mtext('The red diamond shapes represent the mean values.')
 dev.off()
 
 saveaspng('diffppg-position')
-plot(alldat$diffppg, type = 'n', xlim = c(1, max(alldat$position) - 1),
-	main = paste0('Differences From Immediately-Below-Rank Teams in ',
-	'Points Per Game,\nas a Function of Season-End Position'),
-	xlab = 'Season-end position', ylab = 'Difference in points per game',
-	ylim = range(pos_league_diffavg$diffppg))
-for (i in seq_along(leagues)) {
-	with(pos_league_diffavg, points(diffppg[league == leagues[i]],
-		type = 'b', col = i, pch = i, lty = i))
-}
+myscatterplot('diffppg', pos_league_diffavg, main = paste('Differences From',
+	'Immediately-Below-Rank Teams in Points Per Game,\n'),
+	ylab = 'Difference in points per game')
 ## add horizontal line at difference = .15 and vertical line at position = 2
 abline(h = .15, v = 2, col = i + 1:2, lty = i + 1:2, lwd = 3)
 ## add explanatory text
 text(10.5, .162, 'equivalent to 5-6 points per season')
 text(2.3, .29, paste0('difference between\nsecond-place team\n',
 	'and third-place team'), adj = 0)
-## add legend
-legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
 dev.off()
 
 ##### PLOT OF WIN PROPORTIONS #####
 
 saveaspng('winprop-position')
-plot(alldat$winprop, type = 'n', xlab = 'Season-end position',
-	main = 'Win Proportions as a Function of Season-End Position',
-	ylab = 'Win proportion', xlim = c(1, max(alldat$position)), 
-	ylim = range(pos_league_avg$winprop))
-for (i in seq_along(leagues)) {
-	points(pos_league_avg$winprop[pos_league_avg$league == leagues[i]], 
-		type = 'b', col = i, pch = i, lty = i)
-}
+myscatterplot('winprop', pos_league_avg, main = 'Win Proportions ',
+	ylab = 'Win proportion')
 ## add vertical line at position = 7
 abline(v = 7, col = i + 1, lty = i + 1, lwd = 3)
 text(5.5, .3, 'Position #7')
-## add legend
-legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
 dev.off()
 
 ##### PLOT OF DIFFERENCES FROM IMMEDIATELY-BELOW-RANK TEAMS IN WIN PROPORTION #####
 
 saveaspng('diffwinprop-position')
-plot(alldat$diffwinprop, type = 'n', xlim = c(1, max(alldat$position) - 1),
-	main = paste0('Differences From Immediately-Below-Rank Teams in ',
-	'Win Proportion,\nas a Function of Season-End Position'),
-	xlab = 'Season-end position', ylab = 'Difference in win proportion',
-	ylim = range(pos_league_diffavg$diffwinprop))
-for (i in seq_along(leagues)) {
-	with(pos_league_diffavg, points(diffwinprop[league == leagues[i]],
-		type = 'b', col = i, pch = i, lty = i))
-}
+myscatterplot('diffwinprop', pos_league_diffavg, main = paste('Differences',
+	'From Immediately-Below-Rank Teams in Points Per Game,\n'),
+	ylab = 'Difference in win proportion')
 ## add horizontal line at difference = .065 and vertical line at position = 2
 abline(h = .065, v = 2, col = i + 1:2, lty = i + 1:2, lwd = 3)
 ## add explanatory text
 text(10, .07, 'difference = .065, or more than 2 wins per season')
 text(2.3, .125, paste0('difference between\nsecond-place team\n',
 	'and third-place team'), adj = 0)
-## add legend
-legend('top', leagues, col = 1:i, pch = 1:i, lty = 1:i, inset = .1)
 dev.off()
 
 ##### PLOTS OF POINTS AFTER EACH WEEK #####
@@ -413,10 +381,9 @@ dev.off()
 ## points per game
 
 saveaspng('top4vsnontop4-ppg')
-boxplot(ppg ~ top4 + league, alldat, show.names = F, col = 3:4,
+myboxplot(ppg ~ top4 + league, alldat, show.names = F, col = 3:4,
 	main = paste('Comparing Points Per Game of Top-4 Vs. Non-Top-4',
-	'in Each League'), xlab = NULL, ylab = 'Points per game', boxwex = .6, 
-	medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
+	'in Each League'), xlab = NULL, ylab = 'Points per game')
 ## add labels
 mtext(c('Not top 4', 'Top 4'), at = 1:(n_leagues*2), side = 1, line = 1,
 	col = 3:4)
@@ -426,10 +393,9 @@ dev.off()
 ## win proportions
 
 saveaspng('top4vsnontop4-winprop')
-boxplot(winprop ~ top4 + league, alldat, show.names = F, col = 3:4,
+myboxplot(winprop ~ top4 + league, alldat, show.names = F, col = 3:4,
 	main = paste('Comparing Win Proportions for Top-4 Vs. Non-Top-4',
-	'in Each League'), xlab = NULL, ylab = 'Win proportion', boxwex = .6, 
-	medlwd = 2, whisklwd = .5, staplewex = .3, outcex = .5)
+	'in Each League'), xlab = NULL, ylab = 'Win proportion')
 ## add labels
 mtext(c('Not top 4', 'Top 4'), at = 1 :(n_leagues*2), side = 1, line = 1,
 	col = 3:4)
